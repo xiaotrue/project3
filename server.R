@@ -10,7 +10,7 @@ library(scales)
 library(lattice)
 library(dplyr)
 library(knitr)
-
+library(ggplot2)
 # Leaflet bindings are a bit slow; for now we'll just sample to compensate
 set.seed(100)
 zipdata <- allzips[sample.int(nrow(allzips), 10000),]
@@ -219,5 +219,144 @@ function(input, output, session) {
           "and the numeric summary by selecting a variable in boxplot \n",
           "also, you can see the correlation between income and college")
   })
+  
+ 
+  ##start here 1
+  pca_objects <- reactive({
+                   the_data_subset <- allzips %>% select("adultpop","households","college","income")
+                   
+                  # from http://rpubs.com/sinhrks/plot_pca
+                   pca_output <- prcomp(
+                     na.omit(the_data_subset),
+                     center = input$center,
+                     scale = input$scale_data
+                     
+                   )
+    
+  })
+  ##end here 1
+  
+  output$SCREE_PLOT <- renderPlot({
+    pca_output <- pca_objects()
+    eig = (pca_output$sdev) ^ 2
+    variance <- eig * 100 / sum(eig)
+    cumvar <- paste(round(cumsum(variance), 1), "%")
+    eig_df <- data.frame(eig = eig,
+                         PCs = colnames(pca_output$x),
+                         cumvar =  cumvar)
+    
+    num_PCS_to_plot = input$pc_range
+    
+    # limit to 10 PCs
+    eig_df <- eig_df[1:num_PCS_to_plot,]
+    eig <- eig[1:num_PCS_to_plot]
+    cumvar <- cumvar[1:num_PCS_to_plot]
+    
+    ggplot(eig_df, aes(reorder(PCs,-eig), eig)) +
+      geom_bar(stat = "identity",
+               fill = "white",
+               colour = "black") +
+      geom_text(label = cumvar,
+                size = 4,
+                vjust = -0.4) +
+      theme_bw(base_size = 14) +
+      xlab("PC") +
+      ylab("Variances") +
+      ylim(0, (max(eig_df$eig) * 1.1))
+  })
+  
+  # PC plot
+  
+  output$the_pcs_to_plot_x <- renderUI({
+    pca_output <- pca_objects()$x
+    
+    # drop down selection
+    selectInput(
+      inputId = "the_pcs_to_plot_x",
+      label = "X axis:",
+      choices = colnames(pca_output),
+      selected = 'PC1'
+    )
+  })
+  
+  output$the_pcs_to_plot_y <- renderUI({
+    pca_output <- pca_objects()$x
+    
+    # drop down selection
+    selectInput(
+      inputId = "the_pcs_to_plot_y",
+      label = "Y axis:",
+      choices = colnames(pca_output),
+      selected = 'PC2'
+    )
+  })
+  
+  ##start here 2
+  # PC plot
+  pca_biplot <- reactive({
+    the_data_subset <- allzips %>% select("adultpop","households","college","income")
+    pca_output <-  pca_objects()
+    pcs_df <- cbind(the_data_subset, pca_output$x)
+    
+    var_expl_x <-
+      round(100 * pca_output$sdev[as.numeric(gsub("[^0-9]", "", input$the_pcs_to_plot_x))] ^
+              2 / sum(pca_output$sdev ^ 2), 1)
+    var_expl_y <-
+      round(100 * pca_output$sdev[as.numeric(gsub("[^0-9]", "", input$the_pcs_to_plot_y))] ^
+              2 / sum(pca_output$sdev ^ 2), 1)
+    labels <- rownames(pca_output$x)
+    
+    
+    #TODO: separate the plot + legend since the legends can vary in size considerably
+    
+    
+      pc_plot <<- ggplot(pcs_df,
+                         aes_string(input$the_pcs_to_plot_x,
+                                    input$the_pcs_to_plot_y))
+   
+    
+    
+      pc_plot = pc_plot + geom_point()
+    
+    
+    pc_plot <- pc_plot +
+      theme_gray(base_size = 14)
+    
+    
+    
+    if (input$draw_ellipse) {
+      pc_plot = pc_plot + stat_ellipse(
+        aes(fill = 'fill_'),
+        geom = "polygon",
+        alpha = 0.2,
+        show.legend = FALSE
+      )
+    }
+    
+    pc_plot <- pc_plot +
+      coord_equal() +
+      xlab(paste0(
+        input$the_pcs_to_plot_x,
+        " (",
+        var_expl_x,
+        "% explained variance)"
+      )) +
+      ylab(paste0(
+        input$the_pcs_to_plot_y,
+        " (",
+        var_expl_y,
+        "% explained variance)"
+      ))
+    pc_plot
+  })
+  
+  ##end here 2
+  output$PCA_PLOT <- renderPlot({
+    
+    pca_biplot()
+    
+  })
+  
+  
 }
   

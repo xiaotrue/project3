@@ -99,9 +99,58 @@ vars <- c(
                                )
            ),
            navbarMenu("Data Analysis",
-                        tabPanel( "PCA Analysis"
-                                 
+                  tabPanel( "PCA Analysis",
+                            h1("PCA Analysis"),
+                            fluidRow(
+                                    checkboxInput(inputId = 'center',
+                                                  label = h4('Shift variables to be zero-centered', style = "color:red;"),
+                                                  value = TRUE),
+                                    checkboxInput(inputId = 'scale_data',
+                                                  label = h4('Scale variables to have unit variance', style = "color:red;"),
+                                                  value = TRUE)
                                   ),
+                                  
+                            br(),
+                            h2("Scree Plot"),
+                            fluidRow(column(8,
+                                           plotOutput("SCREE_PLOT", height = "300px")
+                                  ),
+                                  column(4,
+                                         numericInput("pc_range",
+                                                      "Number of PCs to plot",
+                                                      value=4,
+                                                      min = 1,
+                                                      max = 4,
+                                                      width= '120px') 
+                                  )
+                               ),
+                            br(),
+                            #start 2
+                            h2("Biplot"),
+                              fluidRow(column(8,
+                                              plotOutput ("PCA_PLOT", height = 400,
+                                                          brush = brushOpts(
+                                                            id = "PCA_PLOTBrush",
+                                                            resetOnNew = TRUE))
+                                      ),
+                                      column(4,
+                                             wellPanel(
+                                               
+                                               uiOutput("the_pcs_to_plot_x"),
+                                               uiOutput("the_pcs_to_plot_y"),
+                                               checkboxInput(inputId = 'draw_ellipse',
+                                                             label = 'Draw ellipse around groups',
+                                                             value = TRUE)
+                                               
+                                              
+                                       )
+                                      
+                                    )
+                              )
+                           # end row end 2
+                            
+                            
+                    ),##end of PCA
                                  
                                   
                      
