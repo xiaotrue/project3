@@ -53,7 +53,11 @@ function(input, output, session) {
     newdata <- cleantable %>% filter(State == input$Summery_states)%>% select("Score","Population","College","Income")
     
   })
-  
+  trainTable <- reactive(
+    {
+      traindata <-allzips
+    }
+  )
   # Precalculate the breaks we'll need for the two histograms
   centileBreaks <- hist(plot = FALSE, allzips$centile, breaks = 20)$breaks
   
@@ -225,8 +229,7 @@ function(input, output, session) {
   pca_objects <- reactive({
                    the_data_subset <- allzips %>% select("adultpop","households","college","income")
                    
-                  # from http://rpubs.com/sinhrks/plot_pca
-                   pca_output <- prcomp(
+                     pca_output <- prcomp(
                      na.omit(the_data_subset),
                      center = input$center,
                      scale = input$scale_data
@@ -350,12 +353,39 @@ function(input, output, session) {
     pc_plot
   })
   
-  ##end here 2
   output$PCA_PLOT <- renderPlot({
     
     pca_biplot()
     
   })
+ 
+  output$NumPredictors = renderUI({
+    radioButtons("NumPredictor", label = "Include all the predictors",
+                 choices = list("Yes" = 1, "No" = 2), 
+                 selected = 1)
+  })
+  
+  output$Predictors = renderUI(if(input$NumPredictor==2){
+    selectInput(
+      "Predictor", 
+      label = "Chose Predictors",
+      "",selectize=TRUE,multiple=TRUE,choices=names(trainTable())
+    )
+  })
+  ###start here
+  output$ScatterAllPairs<-renderPlot({
+    
+    progress <- shiny::Progress$new()
+    # Make sure it closes when we exit this reactive, even if there's an error
+    on.exit(progress$close())
+    
+    progress$set(message = "Plot will be displayed..Kindly wait......")
+    pairs(trainTable() %>% select("centile","adultpop","households","college","income"), 
+          main="Simple Scatterplot Matrix")      
+    
+  })
+  
+  ### end here
   
   
 }

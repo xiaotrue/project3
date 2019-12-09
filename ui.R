@@ -151,12 +151,32 @@ vars <- c(
                             
                             
                     ),##end of PCA
-                                 
+              
+                  tabPanel( "Supervised Modeling and Predicting",
+                            
+                            h1("Supervised Modeling and Predicting:"),
+                          
+                                           
+                                 sidebarPanel(
+                                   
+                                   selectInput("MLT", "Choose a Model:", choice=c("Linear regression"=1,
+                                                                                  "Random Forest"=2,
+                                                                                  "KNN"=3), selectize=FALSE),
+                                   uiOutput("NumPredictors"),
+                                   uiOutput("Predictors"),
+                                   br()
                                   
-                     
-                        tabPanel( "Supervised Modeling and Predicting"
-                     
-                                )
+                                 ),
+                                 mainPanel(
+                                   h2("Scatter explore"),
+                                   plotOutput ("ScatterAllPairs", height = 500,width=500),
+                                   verbatimTextOutput("fit.lm") 
+                                 ),
+                            
+                            
+                            br() ###end 1
+
+                      ) ## end of supervised learning
            ),
            tabPanel("Interactive map",
                     div(class="outer",
