@@ -11,6 +11,7 @@ library(lattice)
 library(dplyr)
 library(knitr)
 library(ggplot2)
+library(caret)
 # Leaflet bindings are a bit slow; for now we'll just sample to compensate
 set.seed(100)
 zipdata <- allzips[sample.int(nrow(allzips), 10000),]
@@ -224,8 +225,6 @@ function(input, output, session) {
           "also, you can see the correlation between income and college")
   })
   
- 
-  ##start here 1
   pca_objects <- reactive({
                    the_data_subset <- allzips %>% select("adultpop","households","college","income")
                    
@@ -237,8 +236,7 @@ function(input, output, session) {
                    )
     
   })
-  ##end here 1
-  
+ 
   output$SCREE_PLOT <- renderPlot({
     pca_output <- pca_objects()
     eig = (pca_output$sdev) ^ 2
@@ -294,7 +292,7 @@ function(input, output, session) {
     )
   })
   
-  ##start here 2
+ 
   # PC plot
   pca_biplot <- reactive({
     the_data_subset <- allzips %>% select("adultpop","households","college","income")
@@ -369,10 +367,10 @@ function(input, output, session) {
     selectInput(
       "Predictor", 
       label = "Chose Predictors",
-      "",selectize=TRUE,multiple=TRUE,choices=names(trainTable())
+      selected = "College",selectize=TRUE,multiple=TRUE,choices=names(newTable())
     )
   })
-  ###start here
+  
   output$ScatterAllPairs<-renderPlot({
     
     progress <- shiny::Progress$new()
@@ -384,6 +382,47 @@ function(input, output, session) {
           main="Simple Scatterplot Matrix")      
     
   })
+  
+  ###start here
+  output$Model = renderPrint({
+    set.seed(7)
+    trainControl <- trainControl(method="cv")
+    
+    #if(input$Go){
+    #DF<-na.omit(zipdata %>% select("income","centile","college","adultpop","households"))
+    DF<-na.omit(newTable())
+    #print(index)
+    #Target<-as.matrix(DF[,input$Target])
+    #print(Target)
+    #Features<-as.matrix(DF[,-c(index)])
+    #Target<-input$Target
+    #print(make.names(Target))
+    #Features<-paste(c(colnames(DF[,-c(index)])),collapse=" + ")
+    if (input$NumPredictor==1){
+      Formula<-as.formula(paste("Income", ".", sep = " ~ "))
+    }else{
+      Formula<-as.formula(paste("Income", paste(input$Predictor, collapse = " + "), sep = " ~ "))
+    }
+    
+    if(input$MLT==1){
+      fit.linear<<- train(Formula, data=DF, method="lm", 
+                          preProc=c("center", "scale"), trControl=trainControl)
+      
+      results <<- resamples(list(LinearRegression=fit.linear,LinearRegression=fit.linear))
+      #LFC$Linear<-fit.linear
+      print(fit.linear)
+      print(varImp(fit.linear))
+      summary(results)
+    }else if(input$MLT==2){
+      fit.rf<<- train(Formula, data=DF, method="rf", 
+                      preProc=c("center", "scale"), trControl=trainControl,importance=T)
+      
+      results <- resamples(list(RandomForest=fit.rf,RandomForest=fit.rf))
+      print(fit.rf)
+      print(varImp(fit.rf))
+      summary(results)    
+    }
+  }) 
   
   ### end here
   

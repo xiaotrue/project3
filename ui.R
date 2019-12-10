@@ -8,6 +8,7 @@
 library(shiny)
 library(leaflet)
 
+
 # Choices for drop-downs
 vars <- c(
   "Is SuperZIP?" = "superzip",
@@ -155,8 +156,6 @@ vars <- c(
                   tabPanel( "Supervised Modeling and Predicting",
                             
                             h1("Supervised Modeling and Predicting:"),
-                          
-                                           
                                  sidebarPanel(
                                    
                                    selectInput("MLT", "Choose a Model:", choice=c("Linear regression"=1,
@@ -170,7 +169,7 @@ vars <- c(
                                  mainPanel(
                                    h2("Scatter explore"),
                                    plotOutput ("ScatterAllPairs", height = 500,width=500),
-                                   verbatimTextOutput("fit.lm") 
+                                   verbatimTextOutput("Model") 
                                  ),
                             
                             
