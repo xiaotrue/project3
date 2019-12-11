@@ -153,9 +153,9 @@ vars <- c(
                             
                     ),##end of PCA
               
-                  tabPanel( "Supervised Modeling and Predicting",
+                  tabPanel( "Supervised Modeling",
                             
-                            h1("Supervised Modeling and Predicting:"),
+                            h1("Supervised Modeling:"),
                                  sidebarPanel(
                                    
                                    selectInput("MLT", "Choose a Model:", choice=c("Linear regression"=1,
@@ -168,6 +168,7 @@ vars <- c(
                                  ),
                                  mainPanel(
                                    h2("Scatter explore"),
+                                   h3("Please kindly wait for a while due to a scatter output in the first output"),
                                    plotOutput ("ScatterAllPairs", height = 500,width=500),
                                    verbatimTextOutput("Model") 
                                  ),
@@ -175,7 +176,37 @@ vars <- c(
                             
                             br() ###end 1
 
-                      ) ## end of supervised learning
+                      ), ## end of supervised Modeling
+                  tabPanel("Predict",
+                           sidebarPanel(
+                             
+                             selectInput("PredictMLT", "Choose a Model to predict:", choice=c("Linear regression"=1,
+                                                                                              "Random Forest"=2,
+                                                                                              "KNN"=3), selectize=FALSE),
+                             
+                             
+                             numericInput("collegepredictor",label = "College percentdage (0-100):",
+                                           value = NA,
+                                          min=0,max = 100),
+                             
+                             numericInput("populationpredictor",label = "Adult population in the area:",
+                                          value = NA,
+                                          min=0,max = NA),
+                             
+                             br(),
+
+                             actionButton("Go", "Submit")
+                             
+                           ),
+                           mainPanel(
+                             h2("Predict explore"),
+                             verbatimTextOutput("predictOutput")
+                             #dataTableOutput("predictOutput")
+                           ),
+                          br()       
+                    
+                  )## End of predict
+                  
            ),
            tabPanel("Interactive map",
                     div(class="outer",

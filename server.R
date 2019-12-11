@@ -383,21 +383,23 @@ function(input, output, session) {
     
   })
   
-  ###start here
+
   output$Model = renderPrint({
+    
+    # Create a Progress object
+    progress <- shiny::Progress$new()
+    # Make sure it closes when we exit this reactive, even if there's an error
+    on.exit(progress$close())
+    
+    progress$set(message = "Processing is going on..Kindly wait")
+    
     set.seed(7)
     trainControl <- trainControl(method="cv")
     
     #if(input$Go){
     #DF<-na.omit(zipdata %>% select("income","centile","college","adultpop","households"))
     DF<-na.omit(newTable())
-    #print(index)
-    #Target<-as.matrix(DF[,input$Target])
-    #print(Target)
-    #Features<-as.matrix(DF[,-c(index)])
-    #Target<-input$Target
-    #print(make.names(Target))
-    #Features<-paste(c(colnames(DF[,-c(index)])),collapse=" + ")
+
     if (input$NumPredictor==1){
       Formula<-as.formula(paste("Income", ".", sep = " ~ "))
     }else{
@@ -407,6 +409,10 @@ function(input, output, session) {
     if(input$MLT==1){
       fit.linear<<- train(Formula, data=DF, method="lm", 
                           preProc=c("center", "scale"), trControl=trainControl)
+      
+      newdata = data.frame(College=72, Score=20, Population=85)
+      y = predict(fit.linear, newdata)
+      print(y)
       
       results <<- resamples(list(LinearRegression=fit.linear,LinearRegression=fit.linear))
       #LFC$Linear<-fit.linear
@@ -423,6 +429,38 @@ function(input, output, session) {
       summary(results)    
     }
   }) 
+  ### start here
+  
+  
+  output$predictOutput = renderPrint(if(input$Go){
+    # Create a Progress object
+    progress <- shiny::Progress$new()
+    # Make sure it closes when we exit this reactive, even if there's an error
+    on.exit(progress$close())
+    
+    DF<-na.omit(newTable())
+    set.seed(7)
+    trainControl <- trainControl(method="cv")
+    
+    DFTest<-data.frame(College=input$collegepredictor,Population=input$populationpredictor)
+    
+    if(input$MLT==1){
+      prefit.linear<<- train(Income ~ College + Population, data=DF, method="lm", 
+                          preProc=c("center", "scale"), trControl=trainControl)
+      
+      print(predict(prefit.linear,DFTest))
+      
+    }
+    
+    if(input$PredictMLT==2){
+      prefit.rf<<- train(Income ~ College + Population, data=DF, method="rf", 
+                      preProc=c("center", "scale"), trControl=trainControl,importance=T)
+      print(predict(prefit.rf,DFTest))
+    }
+    
+    
+  })
+    
   
   ### end here
   
