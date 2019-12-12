@@ -7,6 +7,7 @@
 
 library(shiny)
 library(leaflet)
+library(plotly)
 
 
 # Choices for drop-downs
@@ -70,26 +71,31 @@ vars <- c(
                                 ),
                       tabPanel("Data Summeries",
                                sidebarLayout( position = "right",fluid = TRUE,
-                                 
+                                
                                  sidebarPanel(
-                                   
+                                  
                                    selectInput("Summery_states", "Select a State", 
                                                c(structure(state.abb, names=state.name), 
                                                  "Washington, DC"="DC"), multiple=FALSE),
-                                   selectInput("var",label="Choose a variable",choice=c("Score"=1,
-                                                                                        "Population"=2,
-                                                                                        "College"=3,
-                                                                                        "Income"=4), selectize=FALSE),
+                                   selectInput("var",label="Choose a variable",choice=c("Score",
+                                                                                        "Population",
+                                                                                        "College",
+                                                                                        "Income"), selectize=FALSE),
                                    
                                   
-                                   br(),
-                                   downloadButton("downloadData", "Download")
+                                   br()
                                  ),
                                  mainPanel(
-                                   textOutput("info_s"),
-                                   h3(textOutput("Summery_states")),
                                    
+                                   h2("What you can do in this page:", style = "color:blue;"),
+                                   h3("When you select a State and a variable", style = "color:blue;"),
+                                   h3("1. The Scatter Plot shows the Correlation Between Income and College, you can find that they are linearly correlated.",style = "color:blue;"),
+                                   h3("2. For the histogram, I use the Ploty package, you can click and select a region of the histogram and hover it.
+                                          You can download the plot as a png by clicking the camera button on the upper corrner", style = "color:blue;"),
+                                   h3("3. The box plot shows the common numeric summery of the selected variable, you can see others by changing the selections", style = "color:blue;"),
+                                   h3("4. The total variable numeric summeries were showed in the table", style = "color:blue;"),
                                    plotOutput("scatterCollegeIncome_state", height = 250),
+                                   plotlyOutput("Hist",height=520,width=1200),
                                    h3(textOutput("var", container = span)),
                                    plotOutput("box"),
                                    
@@ -142,14 +148,10 @@ vars <- c(
                                                checkboxInput(inputId = 'draw_ellipse',
                                                              label = 'Draw ellipse around groups',
                                                              value = TRUE)
-                                               
-                                              
                                        )
                                       
                                     )
                               )
-                           # end row end 2
-                            
                             
                     ),##end of PCA
               

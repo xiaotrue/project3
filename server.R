@@ -12,6 +12,7 @@ library(dplyr)
 library(knitr)
 library(ggplot2)
 library(caret)
+library(plotly)
 # Leaflet bindings are a bit slow; for now we'll just sample to compensate
 set.seed(100)
 zipdata <- allzips[sample.int(nrow(allzips), 10000),]
@@ -214,8 +215,8 @@ function(input, output, session) {
   })
   
   output$box <- renderPlot({
-    x<-summary(newTable()[,as.numeric(input$var)])
-    boxplot(x,col="sky blue",border="purple",main=names(newTable()[as.numeric(input$var)]))
+    x<-summary(newTable()[,input$var])
+    boxplot(x,col="sky blue",border="purple",main=names(newTable()[input$var]))
   })
   
   output$info_s <- renderText({
@@ -429,8 +430,6 @@ function(input, output, session) {
       summary(results)    
     }
   }) 
-  ### start here
-  
   
   output$predictOutput = renderPrint(if(input$Go){
     # Create a Progress object
@@ -460,9 +459,25 @@ function(input, output, session) {
     
     
   })
-    
   
-  ### end here
+  ###start here
+  
+  output$Hist<-renderPlotly({
+    
+    DF<-na.omit(newTable())
+    
+    H <- hist(DF[,input$var], plot = FALSE)
+    
+    minimum<-min(H$breaks,na.rm=TRUE)
+    maximum<-max(H$breaks,na.rm=TRUE)
+    step<-H$breaks[2]-H$breaks[1]
+    
+    ggplot(DF,aes_string(x=input$var)) + 
+      stat_bin(binwidth=step,colour="blue",fill="pink") +  
+      stat_bin(binwidth=step, geom="text", aes(label=scales::percent((..count../sum(..count..)))), vjust=-1.5)+
+      scale_x_continuous(breaks=seq(minimum,maximum, by=step))+theme_bw()
+  })
+    ### end here
   
   
 }
