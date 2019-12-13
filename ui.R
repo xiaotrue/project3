@@ -2,9 +2,6 @@
 #Jenny Xiao
 # 
 #
-#   
-#
-
 library(shiny)
 library(leaflet)
 library(plotly)
