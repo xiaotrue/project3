@@ -22,8 +22,7 @@ zipdata <- zipdata[order(zipdata$centile),]
 
 function(input, output, session) {
   
- 
-  
+
   ## Interactive Map ###########################################
   
   # Create the map
@@ -77,13 +76,7 @@ function(input, output, session) {
          border = 'white')
   })
   
-  output$scatterCollegeIncome <- renderPlot({
-    # If no zipcodes are in view, don't plot
-    if (nrow(zipsInBounds()) == 0)
-      return(NULL)
-    
-    print(xyplot(income ~ college, data = zipsInBounds(), xlim = range(allzips$college), ylim = range(allzips$income)))
-  })
+ 
   
   # This observer is responsible for maintaining the circles and legend,
   # according to the variables the user has chosen to map to color and size.
@@ -187,6 +180,15 @@ function(input, output, session) {
     })
   })
   
+  # Downloadable csv of selected dataset ----
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(input$dataset, ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(newTable(), file, row.names = FALSE)
+    })
+  
   output$ziptable <- DT::renderDataTable({
     df <- cleantable %>%
       filter(
@@ -202,6 +204,7 @@ function(input, output, session) {
     DT::datatable(df, options = list(ajax = list(url = action)), escape = FALSE)
   })
   
+  ############Data Summery  #############################
   
   output$summerytable <- renderPrint({
     
@@ -214,18 +217,28 @@ function(input, output, session) {
     print(xyplot(Income ~ College, data = newTable(), xlim = range(allzips$college), ylim = range(allzips$income)))
   })
   
+  output$Hist<-renderPlotly({
+    
+    DF<-na.omit(newTable())
+    
+    H <- hist(DF[,input$var], plot = FALSE)
+    
+    minimum<-min(H$breaks,na.rm=TRUE)
+    maximum<-max(H$breaks,na.rm=TRUE)
+    step<-H$breaks[2]-H$breaks[1]
+    
+    ggplot(DF,aes_string(x=input$var)) + 
+      stat_bin(binwidth=step,colour="blue",fill="pink") +  
+      stat_bin(binwidth=step, geom="text", aes(label=scales::percent((..count../sum(..count..)))), vjust=-1.5)+
+      scale_x_continuous(breaks=seq(minimum,maximum, by=step))+theme_bw()
+  })
+  
   output$box <- renderPlot({
     x<-summary(newTable()[,input$var])
     boxplot(x,col="sky blue",border="purple",main=names(newTable()[input$var]))
   })
   
-  output$info_s <- renderText({
-    
-    paste("In this page, you can review the numeric summary by selecting a state,\n",
-          "and the numeric summary by selecting a variable in boxplot \n",
-          "also, you can see the correlation between income and college")
-  })
-  
+  #################   PCA Analysis ################################## 
   pca_objects <- reactive({
                    the_data_subset <- allzips %>% select("adultpop","households","college","income")
                    
@@ -357,6 +370,8 @@ function(input, output, session) {
     pca_biplot()
     
   })
+  
+  #######################Supervised Learning #######################
  
   output$NumPredictors = renderUI({
     radioButtons("NumPredictor", label = "Include all the predictors",
@@ -397,8 +412,6 @@ function(input, output, session) {
     set.seed(7)
     trainControl <- trainControl(method="cv")
     
-    #if(input$Go){
-    #DF<-na.omit(zipdata %>% select("income","centile","college","adultpop","households"))
     DF<-na.omit(newTable())
 
     if (input$NumPredictor==1){
@@ -431,11 +444,15 @@ function(input, output, session) {
     }
   }) 
   
+  ################   Predicting    ####################################
+  
   output$predictOutput = renderPrint(if(input$Go){
+    
     # Create a Progress object
     progress <- shiny::Progress$new()
     # Make sure it closes when we exit this reactive, even if there's an error
     on.exit(progress$close())
+    progress$set(message = "Processing is going on... Please wait")
     
     DF<-na.omit(newTable())
     set.seed(7)
@@ -457,28 +474,17 @@ function(input, output, session) {
       print(predict(prefit.rf,DFTest))
     }
     
-    
   })
   
-  ###start here
-  
-  output$Hist<-renderPlotly({
-    
-    DF<-na.omit(newTable())
-    
-    H <- hist(DF[,input$var], plot = FALSE)
-    
-    minimum<-min(H$breaks,na.rm=TRUE)
-    maximum<-max(H$breaks,na.rm=TRUE)
-    step<-H$breaks[2]-H$breaks[1]
-    
-    ggplot(DF,aes_string(x=input$var)) + 
-      stat_bin(binwidth=step,colour="blue",fill="pink") +  
-      stat_bin(binwidth=step, geom="text", aes(label=scales::percent((..count../sum(..count..)))), vjust=-1.5)+
-      scale_x_continuous(breaks=seq(minimum,maximum, by=step))+theme_bw()
+  output$ex1 <- renderUI({
+    withMathJax(
+            helpText('  Assuming that we have two predictors, we want to fit a linear model
+                        $$y = \\beta_0 + x_1 \\beta_1 + x_2 \\beta_2, $$ 
+                          where y is the response variable, 
+               $$x_1, x_2$$ are predictors, and 
+               $$\\beta_0, \\beta_1, \\beta_2$$ are parameters to be estimated.')
+    )
   })
-    ### end here
-  
   
 }
   

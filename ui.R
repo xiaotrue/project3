@@ -22,25 +22,17 @@ vars <- c(
 
 
   navbarPage("ShinyApp Project 3", id="nav",
-           
-           tabPanel( "About my Project",
+                    tabPanel("About my Project",   
+                       fluidRow(column(12,
+                                includeHTML("project3.html"),
+                                br()
+                                
+                           ),
+                      h2("The following is some mathematics about the linear regression."),
+                      fluidRow(uiOutput('ex1'))
+                           
+                       )
                        
-                     # Leftside 
-                    fluidRow( 
-                       titlePanel("About the data and Code "),
-                       
-                       a(href="http://www.rstudio.com",target="_blank","Link to RStudio"),
-                       print("The objective of this project is to explore the Kaggle Movies dataset
-                              and answers some interesting questions like which countries produce most movies, 
-                              profitability analysis, kind of movies are most produced,
-                              most produced genres etc. I want to explore few of the 28 columns in detail.")
-                    
-                    ), 
-                    
-                    fluidRow( 
-                           titlePanel("What does this app do?")
-                    )
-                    
            ),
            navbarMenu("Data",
                       tabPanel("Data explorer",
@@ -62,7 +54,10 @@ vars <- c(
                                     ),
                                     column(1,
                                            numericInput("maxScore", "Max score", min=0, max=100, value=100)
-                                    )
+                                    ),
+                                    br(),
+                                    br(),
+                                    downloadButton("downloadData", "Download")
                                   ),
                                hr(),
                                
