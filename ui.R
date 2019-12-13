@@ -22,7 +22,42 @@ vars <- c(
 
 
   navbarPage("ShinyApp Project 3", id="nav",
-                    tabPanel("About my Project",   
+             tabPanel("Interactive map",
+                      div(class="outer",
+                          
+                          tags$head(
+                            # Include our custom CSS
+                            includeCSS("styles.css"),
+                            includeScript("gomap.js")
+                          ),
+                          
+                          # If not using custom CSS, set height of leafletOutput to a number instead of percent
+                          leafletOutput("map", width="100%", height="100%"),
+                          
+                          
+                          absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                        draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+                                        width = 330, height = "auto",
+                                        
+                                        h2("ZIP explorer"),
+                                        
+                                        selectInput("color", "Color", vars),
+                                        selectInput("size", "Size", vars, selected = "adultpop"),
+                                        conditionalPanel("input.color == 'superzip' || input.size == 'superzip'",
+                                                         # Only prompt for threshold when coloring or sizing by superzip
+                                                         numericInput("threshold", "SuperZIP threshold (top n percentile)", 5)
+                                        ),
+                                        
+                                        plotOutput("histCentile", height = 200),
+                                        plotOutput("scatterCollegeIncome", height = 250)
+                          ),
+                          
+                          tags$div(id="cite",
+                                   'Data compiled for ', tags$em('Coming Apart: The State of White America, 1960–2010'), ' by Charles Murray (Crown Forum, 2012).'
+                          )
+                      )
+             ),
+          tabPanel("About my Project",   
                        fluidRow(column(12,
                                 includeHTML("project3.html"),
                                 br()
@@ -34,6 +69,7 @@ vars <- c(
                        )
                        
            ),
+
            navbarMenu("Data",
                       tabPanel("Data explorer",
                                   fluidRow(
@@ -205,41 +241,7 @@ vars <- c(
                   )## End of predict
                   
            ),
-           tabPanel("Interactive map",
-                    div(class="outer",
-                        
-                        tags$head(
-                          # Include our custom CSS
-                          includeCSS("styles.css"),
-                          includeScript("gomap.js")
-                        ),
-                        
-                        # If not using custom CSS, set height of leafletOutput to a number instead of percent
-                        leafletOutput("map", width="100%", height="100%"),
-                        
-                        
-                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                      draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
-                                      width = 330, height = "auto",
-                                      
-                                      h2("ZIP explorer"),
-                                      
-                                      selectInput("color", "Color", vars),
-                                      selectInput("size", "Size", vars, selected = "adultpop"),
-                                      conditionalPanel("input.color == 'superzip' || input.size == 'superzip'",
-                                                       # Only prompt for threshold when coloring or sizing by superzip
-                                                       numericInput("threshold", "SuperZIP threshold (top n percentile)", 5)
-                                      ),
-                                      
-                                      plotOutput("histCentile", height = 200),
-                                      plotOutput("scatterCollegeIncome", height = 250)
-                        ),
-                        
-                        tags$div(id="cite",
-                                 'Data compiled for ', tags$em('Coming Apart: The State of White America, 1960–2010'), ' by Charles Murray (Crown Forum, 2012).'
-                        )
-                    )
-           ),
+
            conditionalPanel("false", icon("crosshair"))
   
 )
